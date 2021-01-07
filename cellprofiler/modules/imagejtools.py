@@ -1,6 +1,7 @@
 from cellprofiler_core.module import Module
 from cellprofiler_core.setting.subscriber import ImageSubscriber
 import imagej
+from multiprocessing import Process
 
 
 class ImageJTools(Module):
@@ -22,5 +23,13 @@ class ImageJTools(Module):
     def visible_settings(self):
         return [self.image_name]
 
-    def run(self, workspace):
+    def do_work(self):
         ij = imagej.init()
+
+    def run(self, workspace):
+        p = Process(target=self.do_work)
+        p.start()
+        p.join()
+
+
+
