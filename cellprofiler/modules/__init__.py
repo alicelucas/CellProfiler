@@ -73,6 +73,7 @@ builtin_modules = {
     "resizeobjects": "ResizeObjects",
     "resize": "Resize",
     "runimagejmacro": "RunImageJMacro",
+    "runimagejscript": "RunImageJScript",
     "savecroppedobjects": "SaveCroppedObjects",
     "saveimages": "SaveImages",
     "shrinktoobjectcenters": "ShrinkToObjectCenters",
