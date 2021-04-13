@@ -273,11 +273,13 @@ def start_imagej_process(input_queue, output_queue, app_path):
         If present, ImageJ will attempt to initialize with the indicated local installation.
     """
 
+    ij = False
+
     if path.exists(app_path):
         ij = imagej.init(app_path)
 
     if not ij:
-        ij = imagej.init("sc.fiji:fiji:2.1.0")
+        ij = imagej.init()
 
     script_service = ij.script()
 
@@ -353,7 +355,7 @@ class RunImageJScript(Module):
         ]
         self.set_notes([" ".join(module_explanation)])
 
-        self.executable_directory = Directory(
+        self.app_directory = Directory(
             "Executable directory", allow_metadata=False, doc="""\
         Select the folder containing the executable. MacOS users should select the directory where Fiji.app lives. Windows users 
         should select the directory containing ImageJ-win64.exe (usually corresponding to the Fiji.app folder).
@@ -403,8 +405,11 @@ Note: this must be done each time you change the script, before running the Cell
         """
         Parse FIJI executable paths from the chosen directory and filename
         """
+        if not self.app_directory.value.split("|")[1]:
+            return self.app_directory.value.split("|")[1]
+
         default_output_directory = get_default_output_directory()
-        app_path = path.join(default_output_directory, self.executable_directory.value.split("|")[1])
+        app_path = path.join(default_output_directory, self.app_directory.value.split("|")[1])
         return app_path
 
     def close_pyimagej(self):
@@ -523,7 +528,7 @@ Note: this must be done each time you change the script, before running the Cell
         pass
 
     def settings(self):
-        result = [self.script_parameter_count, self.executable_directory, self.script_directory, self.script_file, self.get_parameters_button]
+        result = [self.script_parameter_count, self.app_directory, self.script_directory, self.script_file, self.get_parameters_button]
         if len(self.script_parameter_list) > 0:
             result += [Divider(line=True)]
         for script_parameter_group in self.script_parameter_list:
@@ -536,7 +541,10 @@ Note: this must be done each time you change the script, before running the Cell
         return result
 
     def visible_settings(self):
-        visible_settings = [self.executable_directory, self.script_directory, self.script_file, self.get_parameters_button]
+        if self.imagej_process is None:
+            visible_settings = [self.app_directory, self.script_directory, self.script_file, self.get_parameters_button]
+        else:
+            visible_settings = [self.script_directory, self.script_file, self.get_parameters_button]
         if len(self.script_parameter_list) > 0:
             visible_settings += [Divider(line=True)]
         for script_parameter in self.script_parameter_list:
@@ -597,7 +605,7 @@ Note: this must be done each time you change the script, before running the Cell
         if not path.exists(app_path):
             raise ValidationError("Please specify a valid path to a locally installed Fiji/ImageJ. "
                                   "If the path is not valid, a copy of Fiji will be installed on your machine.",
-                                  self.executable_directory)
+                                  self.app_directory)
 
 
     def run(self, workspace):
